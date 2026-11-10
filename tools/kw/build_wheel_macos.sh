@@ -4,6 +4,12 @@
 # Silicon Mac with cmake and uv installed. Mirrors upstream's
 # python/tools/prepare_build_environment_macos.sh for arm64, installing the
 # C++ library under install/ instead of /usr/local.
+#
+# Python build tools: upstream's python/install_requirements.txt
+# (pybind11==2.11.1, the version upstream builds and tests its binding
+# with) plus delocate==0.13.0. CMake is not pinned: the one on the machine
+# is used (4.2.1 when this script was written), with
+# CMAKE_POLICY_VERSION_MINIMUM=3.5 as upstream sets it.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
@@ -26,7 +32,8 @@ cmake --build build-release -j "$(sysctl -n hw.ncpu)"
 cmake --install build-release
 
 uv venv -q --allow-existing -p 3.12 .venv-build
-uv pip install -q -p .venv-build/bin/python pybind11 setuptools wheel delocate
+uv pip install -q -p .venv-build/bin/python -r python/install_requirements.txt \
+    delocate==0.13.0
 
 cp README.md python/
 rm -rf python/build python/dist
