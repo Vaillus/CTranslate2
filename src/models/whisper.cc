@@ -341,6 +341,12 @@ namespace ctranslate2 {
                                                 max_initial_timestamp_id));
       }
 
+      // Last, so the no-speech probability and the timestamp rules read the
+      // logits as upstream does.
+      if (options.boosting_tree)
+        decoding_options.logits_processors.emplace_back(
+          std::make_shared<BoostingTreeProcessor>(options.boosting_tree));
+
       std::vector<DecodingResult> results = decode(*_decoder,
                                                    state,
                                                    start_tokens,

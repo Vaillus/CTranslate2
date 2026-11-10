@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ctranslate2/boosting_tree.h"
 #include "ctranslate2/generation.h"
 #include "ctranslate2/layers/whisper.h"
 #include "ctranslate2/models/model.h"
@@ -56,6 +57,10 @@ namespace ctranslate2 {
       // List of token IDs to suppress.
       // -1 will suppress a default set of symbols as defined in the model config.json file.
       std::vector<int> suppress_tokens = {-1};
+
+      // Prefix tree of keyterms whose score changes are added at each decoding
+      // step (none: decode as upstream).
+      std::shared_ptr<const BoostingTree> boosting_tree;
     };
 
     struct WhisperGenerationResult {

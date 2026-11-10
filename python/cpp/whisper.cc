@@ -46,7 +46,8 @@ namespace ctranslate2 {
                bool suppress_blank,
                const std::optional<std::vector<int>>& suppress_tokens,
                size_t sampling_topk,
-               float sampling_temperature) {
+               float sampling_temperature,
+               std::shared_ptr<BoostingTree> boosting_tree) {
         std::vector<std::future<models::WhisperGenerationResult>> futures;
 
         models::WhisperOptions options;
@@ -64,6 +65,7 @@ namespace ctranslate2 {
         options.return_no_speech_prob = return_no_speech_prob;
         options.max_initial_timestamp_index = max_initial_timestamp_index;
         options.suppress_blank = suppress_blank;
+        options.boosting_tree = std::move(boosting_tree);
 
         if (suppress_tokens)
           options.suppress_tokens = suppress_tokens.value();
@@ -259,6 +261,7 @@ namespace ctranslate2 {
              py::arg("suppress_tokens")=std::vector<int>{-1},
              py::arg("sampling_topk")=1,
              py::arg("sampling_temperature")=1,
+             py::arg("boosting_tree")=py::none(),
              py::call_guard<py::gil_scoped_release>(),
              R"pbdoc(
                  Encodes the input features and generates from the given prompt.
@@ -291,6 +294,9 @@ namespace ctranslate2 {
                      of symbols as defined in the model ``config.json`` file.
                    sampling_topk: Randomly sample predictions from the top K candidates.
                    sampling_temperature: Sampling temperature to generate more random samples.
+                   boosting_tree: A :class:`ctranslate2.models.BoostingTree` whose score changes
+                     are added at each decoding step: to the log-probabilities in beam search,
+                     to the logits in greedy search and sampling. None decodes as upstream.
 
                  Returns:
                    A list of generation results.
