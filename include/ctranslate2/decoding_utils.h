@@ -79,6 +79,14 @@ namespace ctranslate2 {
       return false;
     }
 
+    // The second hook: in beam search, apply this processor to the
+    // log-probabilities, after the log-softmax and before the cumulative scores
+    // are added, instead of to the logits. Greedy decoding and sampling apply it
+    // to the logits as any other processor.
+    virtual bool after_log_softmax() const {
+      return false;
+    }
+
     virtual void apply(dim_t step,
                        StorageView& logits,
                        DisableTokens& disable_tokens,

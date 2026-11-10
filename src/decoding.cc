@@ -515,11 +515,16 @@ namespace ctranslate2 {
                        return_prefix,
                        prefix_ids);
 
+      bool has_after_log_softmax = false;
       if (!logits_processors.empty()) {
         if (alive_seq)
           merge_batch_beam(alive_seq);
-        for (const auto& logits_processor : logits_processors)
-          logits_processor->apply(step, logits, disable_tokens, alive_seq, batch_offset, prefix_ids);
+        for (const auto& logits_processor : logits_processors) {
+          if (logits_processor->after_log_softmax())
+            has_after_log_softmax = true;
+          else
+            logits_processor->apply(step, logits, disable_tokens, alive_seq, batch_offset, prefix_ids);
+        }
         if (alive_seq)
           split_batch_beam(alive_seq, _beam_size);
       }
@@ -544,6 +549,19 @@ namespace ctranslate2 {
       } else {
         ops::LogSoftMax()(logits);
         log_probs.shallow_copy(logits);
+      }
+
+      // The second hook: processors that act on the log-probabilities, before
+      // the cumulative scores are added.
+      if (has_after_log_softmax) {
+        if (alive_seq)
+          merge_batch_beam(alive_seq);
+        for (const auto& logits_processor : logits_processors) {
+          if (logits_processor->after_log_softmax())
+            logits_processor->apply(step, log_probs, disable_tokens, alive_seq, batch_offset, prefix_ids);
+        }
+        if (alive_seq)
+          split_batch_beam(alive_seq, _beam_size);
       }
 
       // Multiply by the current beam log probs.
