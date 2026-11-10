@@ -71,6 +71,20 @@ namespace ctranslate2 {
 
   template<>
   template <typename T>
+  void primitives<Device::CUDA>::indexed_add(T* x,
+                                             const T* values,
+                                             const int32_t* indices,
+                                             dim_t num_indices) {
+    auto element_it = thrust::device_pointer_cast(cuda::device_cast(x));
+    auto index_it = thrust::device_pointer_cast(indices);
+    auto it = thrust::make_permutation_iterator(element_it, index_it);
+    auto values_it = thrust::device_pointer_cast(cuda::device_cast(values));
+    THRUST_CALL(thrust::transform, it, it + num_indices, values_it, it,
+                cuda::plus<cuda::device_type<T>>());
+  }
+
+  template<>
+  template <typename T>
   void primitives<Device::CUDA>::copy(const T* x, T* y, dim_t size) {
     CUDA_CHECK(cudaMemcpyAsync(y, x, size * sizeof (T),
                                cudaMemcpyDeviceToDevice, cuda::get_cuda_stream()));
@@ -762,6 +776,8 @@ namespace ctranslate2 {
   primitives<Device::CUDA>::strided_fill(T* x, T a, dim_t inc_x, dim_t size); \
   template void                                                         \
   primitives<Device::CUDA>::indexed_fill(T*, T, const int32_t*, dim_t); \
+  template void                                                         \
+  primitives<Device::CUDA>::indexed_add(T*, const T*, const int32_t*, dim_t); \
   template void                                                         \
   primitives<Device::CUDA>::copy<T>(const T* x, T* y, dim_t size);      \
   template T                                                            \
