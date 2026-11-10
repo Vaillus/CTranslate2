@@ -114,6 +114,7 @@ set(PRIVATE_INCLUDE_DIRECTORIES
 set(SOURCES
   src/allocator.cc
   src/batch_reader.cc
+  src/boosting_tree.cc
   src/buffered_translation_wrapper.cc
   src/cpu/allocator.cc
   src/cpu/backend.cc
